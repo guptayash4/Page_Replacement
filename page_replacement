@@ -1,0 +1,129 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define Fmax 10
+#define Nmax 50
+
+int pages[Nmax],frames[Fmax],n,f,pageFaults=0;
+
+void input() {
+    printf("\n Enter the number of page frames:- ");
+    scanf("%d",&f);
+    printf(" Enter the number of page reference strings:- ");
+    scanf("%d",&n);
+    printf(" Enter the reference strings in order of arrival:- ");
+    int i;
+    for(i=0;i<n;i++)
+        scanf("%d",&pages[i]);
+    printf("\n\n");
+}
+
+void FIFO() {
+    int front=0,i=0,j,count=0;
+    for(;i<n;i++) {
+        for(j=0;j<count;j++)
+            if(frames[j]==pages[i])
+                break;
+        if(j==count) {
+            pageFaults++;
+            frames[front]=pages[i];
+            front=(front+1)%f;
+            if(count<f)
+                count++;
+        }
+        printf("\n %10d\t\t\t\t",pages[i]);
+        for(j=0;j<count;j++)
+            printf("%3d ",frames[j]);
+    }
+}
+
+void LRU() {
+    int used[Fmax],i=0,j,k,count=0;
+    for(j=0;j<f;j++)
+        used[j]=f-j-1;
+    for(;i<n;i++) {
+        for(j=0;j<count;j++)
+            if(frames[j]==pages[i])
+                break;
+        if(j==count) {
+            pageFaults++;
+            for(j=0;j<f;j++)
+                if(used[j]==f-1)
+                    k=j;
+                else
+                    used[j]++;
+            frames[k]=pages[i];
+            used[k]=0;
+            if(count<f)
+                count++;
+        }
+        else {
+            for(k=0;k<f;k++)
+                if(used[k]<used[j])
+                    used[k]++;
+            used[j]=0;
+        }
+        printf("\n %10d\t\t\t\t",pages[i]);
+        for(j=0;j<count;j++)
+            printf("%3d ",frames[j]);
+    }
+}
+
+void Optimal() {
+    int i=0,j,k,maximum,optimising,count=0,position;
+    for(;i<n;i++) {
+        for(j=0;j<count;j++)
+            if(frames[j]==pages[i])
+                break;
+        if(j==count) {
+            pageFaults++;
+            if(count<f) {
+                frames[count]=pages[i];
+                count++;
+            }
+            else {
+                maximum=0,position=0;
+                for(j=0;j<f;j++) {
+                    optimising=n;
+                    for(k=i+1;k<n;k++) {
+                        if(frames[j]==pages[k]) {
+                           optimising=k-i;
+                           break;
+                        }
+                    }
+                    if(maximum<optimising) {
+                        maximum=optimising;
+                        position=j;
+                    }
+                }
+                frames[position]=pages[i];
+            }
+        }
+        printf("\n %10d\t\t\t\t",pages[i]);
+        for(j=0;j<count;j++)
+            printf("%3d ",frames[j]);
+    }
+}
+
+int main() {
+    input();
+    int choice;
+    printf("\n\t1. First In First Out");
+    printf("\n\t2. Least Recently Used");
+    printf("\n\t3. Optimal");
+    printf("\n\t\tChoose the page replacement algorithm:- ");
+    scanf("%d",&choice);
+    if(choice<1||choice>3)
+        return 0;
+    printf("\n Page Reference Strings \t\t Page Frames");
+    switch(choice) {
+        case 1: FIFO();
+                break;
+        case 2: LRU();
+                break;
+        case 3: Optimal();
+                break;
+    }
+    printf("\n\n Total Page Faults:- %d\n\n",pageFaults);
+    return 0;
+}
